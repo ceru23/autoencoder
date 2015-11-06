@@ -171,6 +171,11 @@ if __name__ == '__main__':
     
     auto.generate_decoder()
     
+    
+   
+    
+    
+        
     t1 = timeit.default_timer()
     
     init_error = auto.train_auto(data)[1]
@@ -187,6 +192,10 @@ if __name__ == '__main__':
     print 'Elapsed time for training: ',t2-t1
     
     np.savetxt("reduced.dat",auto.get_hidden_data(data))
+    p = [(param.name,param.get_value()) for param in auto.param]    
+    np.savetxt("model.dat",p)
+    
+    #np.savetxt("model.dat",for param in auto.params)
     
     #units = [6,3,2]
     
