@@ -165,9 +165,9 @@ if __name__ == '__main__':
       
     auto = autoencoder(units)
 
-  #  tw1 = timeit.default_timer()
-   # auto.pre_train_layers(0,data,100,10)
-    #tw2 = timeit.default_timer()
+    tw1 = timeit.default_timer()
+    auto.pre_train_layers(0,data,100,10)
+    tw2 = timeit.default_timer()
     
     auto.generate_decoder()
     
