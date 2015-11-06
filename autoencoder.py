@@ -186,7 +186,7 @@ if __name__ == '__main__':
     print 'Elapsed time for pretraining: ',tw2-tw1
     print 'Elapsed time for training: ',t2-t1
     
-    np.savetxt("reduced.dat",auto.run_auto(data))
+    np.savetxt("reduced.dat",auto.get_hidden_data(data))
     
     #units = [6,3,2]
     

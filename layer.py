@@ -10,7 +10,8 @@ class layer(object):
         self.n_in = n_in
         self.n_out = n_out
         
-        scale = 0.0001
+        #scale = 0.0001
+        scale = 1
         
         if W_init is None:
             self.W = theano.shared(
