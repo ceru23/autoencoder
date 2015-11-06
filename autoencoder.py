@@ -192,7 +192,8 @@ if __name__ == '__main__':
     print 'Elapsed time for training: ',t2-t1
     
     np.savetxt("reduced.dat",auto.get_hidden_data(data))
-    p = [(param.name,param.get_value()) for param in auto.param]    
+    p = [(param.name,param.get_value()) for param in auto.param]
+    print p,
     np.savetxt("model.dat",p)
     
     #np.savetxt("model.dat",for param in auto.params)
