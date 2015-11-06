@@ -85,6 +85,11 @@ class autoencoder(object):
             return self.output(self.layers[lev].output(x),lev+1)
         
         
+   # def get_weight(self):
+    #    return T.sum([T.sum(T.sqrt(param)**2) for param in self.param])
+        
+        
+    
     def get_reduced_data(self,x,lev=0):
         if(lev==self.n_layers-1):
             return self.layers[lev].output(x)
@@ -92,19 +97,28 @@ class autoencoder(object):
             return self.get_reduced_data(self.layers[lev].output(x),lev+1)
 
 
-    def train_auto(self,data,learning_rate=0.1):
+    def train_auto(self,data,learning_rate=0.1,reg_weight=0.1):
         
         x = T.matrix('x')
         x_hat = T.matrix('x_hat')
-      
+    
         
         x_hat = self.output(x)
        
         
-        cost = T.mean(-T.sum(x * T.log(x_hat) + (1 - x) * T.log(1 - x_hat)))
-        gparams = [T.grad(cost,param) for param in auto.param] 
+      
+        #reg_weight = T.sum([T.sqrt(T.sum(param.get_value())**2) for param in self.param])
+        
+        
+        log_cost = T.mean(-T.sum(x * T.log(x_hat) + (1 - x) * T.log(1 - x_hat)))
+        weight = reg_weight*T.sum([T.sum(param**2) for param in self.param])
+        
+        #cost = T.abs_(log_cost+)
+        
+        cost = T.sum(T.sqrt((x-x_hat)**2))+weight
+        gparams = [T.grad(cost,param) for param in self.param] 
     
-        updates = [(par, par-learning_rate*gpar) for par,gpar in zip(auto.param,gparams)]
+        updates = [(par, par-learning_rate*gpar) for par,gpar in zip(self.param,gparams)]
         
         train = theano.function(
             inputs = [x],
@@ -114,7 +128,6 @@ class autoencoder(object):
         
         error = T.mean(T.sqrt((x-x_hat)**2))
 
-        
         mse = theano.function(
             inputs = [x],
             outputs = error
@@ -171,30 +184,31 @@ if __name__ == '__main__':
     
     auto.generate_decoder()
     
-    
+  #  p = [(param.name,param.get_value()) for param in auto.param]
+   # print p,
    
     
     
         
     t1 = timeit.default_timer()
-    
+   
     init_error = auto.train_auto(data)[1]
     
     for i in range(iters):
-        print auto.train_auto(data)[1],
-    
+        auto.train_auto(data)
+       
     print 'Init error: ', init_error
     print 'Final error: ',auto.train_auto(data)[1]
     
     t2 = timeit.default_timer()
     
-    #print 'Elapsed time for pretraining: ',tw2-tw1
+    print 'Elapsed time for pretraining: ',tw2-tw1
     print 'Elapsed time for training: ',t2-t1
-    
+    p = [np.sum(np.sqrt(param.get_value()**2)) for param in auto.param]
+    print 'Weights: ',sum(p)
     np.savetxt("reduced.dat",auto.get_hidden_data(data))
-    p = [(param.name,param.get_value()) for param in auto.param]
-    print p,
-    np.savetxt("model.dat",p)
+    
+    #np.savetxt("model.dat",p)
     
     #np.savetxt("model.dat",for param in auto.params)
     
