@@ -151,11 +151,11 @@ if __name__ == '__main__':
     #    data = [[float(x) for x in line.split()] for line in f]
     #data = np.asarray(data).astype(theano.config.floatX)
     data = np.loadtxt("swiss.dat",dtype=theano.config.floatX)
-    units = [3,5,2]
+    units = [3,2]
     #data = np.random.randn(100,6).astype(theano.config.floatX)
     
     learning_rate = 0.1
-    iters = 1000
+    iters = 10000
     int_dim = 2
     
     
