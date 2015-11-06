@@ -165,9 +165,9 @@ if __name__ == '__main__':
       
     auto = autoencoder(units)
 
-    tw1 = timeit.default_timer()
-    auto.pre_train_layers(0,data,100,10)
-    tw2 = timeit.default_timer()
+  #  tw1 = timeit.default_timer()
+   # auto.pre_train_layers(0,data,100,10)
+    #tw2 = timeit.default_timer()
     
     auto.generate_decoder()
     
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     
     t2 = timeit.default_timer()
     
-    print 'Elapsed time for pretraining: ',tw2-tw1
+    #print 'Elapsed time for pretraining: ',tw2-tw1
     print 'Elapsed time for training: ',t2-t1
     
     np.savetxt("reduced.dat",auto.get_hidden_data(data))
