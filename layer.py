@@ -39,7 +39,8 @@ class layer(object):
 				
     def output(self,x):
         return T.nnet.sigmoid(T.dot(x,self.W)+self.b)
-    
+        #return T.switch((T.dot(x,self.W)+self.b)<0, 0, T.dot(x,self.W)+self.b)
+        #return T.nnet.softplus(T.dot(x,self.W)+self.b)
     def current_output(self,data):
         
         x = T.matrix('X')

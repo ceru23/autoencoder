@@ -110,19 +110,20 @@ class autoencoder(object):
         #reg_weight = T.sum([T.sqrt(T.sum(param.get_value())**2) for param in self.param])
         
         
-        log_cost = T.mean(-T.sum(x * T.log(x_hat) + (1 - x) * T.log(1 - x_hat)))
-        weight = reg_weight*T.sum([T.sum(param**2) for param in self.param])
+        log_cost = T.mean(T.sqrt(T.abs_(-T.sum(x * T.log(x_hat) + (1 - x) * T.log(1 - x_hat)))))
+        weight = reg_weight*T.sqrt(T.sum([T.sum(param**2) for param in self.param]))
+        lin_cost = T.mean(T.sqrt((x-x_hat)**2))
         
-        #cost = T.abs_(log_cost+)
+        cost = lin_cost+log_cost+weight
         
-        cost = T.sum(T.sqrt((x-x_hat)**2))+weight
+        #cost = T.sum(T.sqrt((x-x_hat)**2))+weight
         gparams = [T.grad(cost,param) for param in self.param] 
     
         updates = [(par, par-learning_rate*gpar) for par,gpar in zip(self.param,gparams)]
         
         train = theano.function(
             inputs = [x],
-            outputs = cost,
+            outputs = [cost,lin_cost,log_cost,weight],
             updates = updates
         )
         
@@ -195,7 +196,7 @@ if __name__ == '__main__':
     init_error = auto.train_auto(data)[1]
     
     for i in range(iters):
-        auto.train_auto(data)
+        print auto.train_auto(data)[0]
        
     print 'Init error: ', init_error
     print 'Final error: ',auto.train_auto(data)[1]
