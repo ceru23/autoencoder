@@ -6,6 +6,7 @@ import timeit
 import math
 import rbm
 import layer
+import pickle
 
 
 class autoencoder(object):
@@ -48,7 +49,8 @@ class autoencoder(object):
                      self.pre_train_layers(lev+1,out,k,iters)
             
                 
-       
+    def layers_from_file(self,param_list):
+        pass
     
         
             
@@ -158,6 +160,17 @@ class autoencoder(object):
     
         return output(data)
     
+    def save_model(self):
+        #p = [(par.name,par.get_value()) for par in self.param]
+        
+        f = open("model.dat","w")
+        pickle.dump(self, f)
+        
+        
+        
+        pass
+        
+    
 if __name__ == '__main__':
     
     
@@ -169,7 +182,7 @@ if __name__ == '__main__':
     #data = np.random.randn(100,6).astype(theano.config.floatX)
     
     learning_rate = 0.1
-    iters = 10000
+    iters = 10
     int_dim = 2
     
     
@@ -195,56 +208,39 @@ if __name__ == '__main__':
    
     init_error = auto.train_auto(data)[1]
     
+    auto.train_auto(data)[1]
+    
+    best = init_error
+    auto.save_model()
+    
     for i in range(iters):
-        print auto.train_auto(data)[0]
+        err = auto.train_auto(data)[1]
+        if(err<best):
+            best = err
+            auto.save_model()
+            print "Best model so far found at iter: ",i
        
     print 'Init error: ', init_error
-    print 'Final error: ',auto.train_auto(data)[1]
+    
+    f = open("model.dat","r")
+    
+    best_auto = pickle.Unpickler(f).load()
+    
+    
+       
+    
+    print 'Final error: ',best_auto.train_auto(data)[1]
     
     t2 = timeit.default_timer()
     
     print 'Elapsed time for pretraining: ',tw2-tw1
     print 'Elapsed time for training: ',t2-t1
-    p = [np.sum(np.sqrt(param.get_value()**2)) for param in auto.param]
+    p = [np.sum(np.sqrt(param.get_value()**2)) for param in best_auto.param]
     print 'Weights: ',sum(p)
-    np.savetxt("reduced.dat",auto.get_hidden_data(data))
+    np.savetxt("reduced.dat",best_auto.get_hidden_data(data))
     
-    #np.savetxt("model.dat",p)
-    
-    #np.savetxt("model.dat",for param in auto.params)
-    
-    #units = [6,3,2]
-    
-    #auto = autoencoder(units)
-    
-  
-   
-    #auto.pre_train_layers(0,data)
-    
-    
-    #print auto.layers[0].current_output(data)
-    
-    #auto.generate_decoder()
-    
-   # for i in auto.layers:
-    #    print i.W.get_value().shape
-    
-    
-    #print 'init_error: ',auto.train_auto(data)
-    
-    #for i in range(iters):
-     #   auto.train_auto(data)
-    
-    #print 'final_error: ',auto.train_auto(data)
-    
-    #print 'data: ',data
-    #print 'rec data: ',auto.run_auto(data)
     
 
-  
-    
-    #print 'data: ',data
-    #print 'rec data with training: ',auto.run_auto(data)
     
     
     
