@@ -182,7 +182,7 @@ if __name__ == '__main__':
     #data = np.random.randn(100,6).astype(theano.config.floatX)
     
     learning_rate = 0.1
-    iters = 10
+    iters = 1000
     int_dim = 2
     
     
