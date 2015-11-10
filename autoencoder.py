@@ -7,7 +7,6 @@ import math
 import rbm
 import layer
 import pickle
-from theano.tensor.shared_randomstreams import RandomStreams
 
 
 class autoencoder(object):
@@ -15,8 +14,6 @@ class autoencoder(object):
     def __init__(self,units_for_level):
         
         
-        np.random.seed(0xbeef)
-        self.rng = RandomStreams(seed=np.random.randint(1 << 30))
         self.layers = self.generate_layers(units_for_level)
         self.param = []
         self.n_layers = len(units_for_level)-1
@@ -100,11 +97,9 @@ class autoencoder(object):
         else:
             return self.get_reduced_data(self.layers[lev].output(x),lev+1)
 
-    def add_nois(self,data,corruption_level=0.3):
+    def add_noise(self,data,corruption_level=0.25):
         ####aggiungo rumore mettendo a zero certe coordinate
-        return self.rng.binomial(size=data.shape, n=1,
-                                        p=1 - corruption_level,
-                                        dtype=theano.config.floatX) * data
+        return (np.random.normal(0.0,corruption_level,data.shape) + data).astype(theano.config.floatX)
 
     def train_auto(self,data,learning_rate=0.25,reg_weight=0.25):
         
@@ -187,7 +182,7 @@ if __name__ == '__main__':
     #    data = [[float(x) for x in line.split()] for line in f]
     #data = np.asarray(data).astype(theano.config.floatX)
     data = np.loadtxt("swiss.dat",dtype=theano.config.floatX)
-    units = [3,2]
+    units = [3,5,2]
     #data = np.random.randn(100,6).astype(theano.config.floatX)
     
     learning_rate = 0.25
@@ -202,7 +197,7 @@ if __name__ == '__main__':
     auto = autoencoder(units)
 
     tw1 = timeit.default_timer()
-    auto.pre_train_layers(0,data,100,1000)
+    auto.pre_train_layers(0,data,10,1000)
     tw2 = timeit.default_timer()
     
     auto.generate_decoder()
@@ -223,7 +218,11 @@ if __name__ == '__main__':
     auto.save_model()
     
     for i in range(iters):
-        err = auto.train_auto(data)[1]
+        if (i%2==0):
+            noise_data = auto.add_noise(data)
+            err = auto.train_auto(noise_data)[1]
+        else:
+            err = auto.train_auto(data)[1]
         print err
         if(err<best):
             best = err
