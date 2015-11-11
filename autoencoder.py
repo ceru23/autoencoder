@@ -7,6 +7,7 @@ import math
 import rbm
 import layer
 import pickle
+import matplotlib.pyplot as plt 
 
 
 class autoencoder(object):
@@ -58,7 +59,7 @@ class autoencoder(object):
         
         for i in range(len(units_for_layers)-1):
             
-            layers.append(layer.layer(units_for_layers[i],units_for_layers[i+1],None,None))
+            layers.append(layer.layer(units_for_layers[i],units_for_layers[i+1],None,None,'sigmoid'))
             
             
         return layers
@@ -68,7 +69,9 @@ class autoencoder(object):
         decoder = []
         for l in reversed(range(self.n_layers)):
             b = np.zeros((self.layers[l].n_in,),dtype=theano.config.floatX)
-            l_t = layer.layer(self.layers[l].n_out,self.layers[l].n_in,(self.layers[l].W.get_value()).T,b)
+            l_t = layer.layer(self.layers[l].n_out,self.layers[l].n_in,(self.layers[l].W.get_value()).T,b,'sigmoid')
+            #l_t = layer.layer(self.layers[l].n_out,self.layers[l].n_in,(self.layers[l].W.get_value()).T,b,'relu')
+            ###activation for decodor not squashing as in Bengio et al. 2010
             decoder.append(l_t)
         self.layers.extend(decoder)
         
@@ -101,7 +104,7 @@ class autoencoder(object):
         ####aggiungo rumore mettendo a zero certe coordinate
         return (np.random.normal(0.0,corruption_level,data.shape) + data).astype(theano.config.floatX)
 
-    def train_auto(self,data,learning_rate=0.25,reg_weight=0.25):
+    def train_auto(self,data,learning_rate=1,reg_weight=0.25):
         
         x = T.matrix('x')
         x_hat = T.matrix('x_hat')
@@ -120,7 +123,7 @@ class autoencoder(object):
         
         #cost = lin_cost+log_cost+weight
         
-        cost = lin_cost+weight
+        cost = lin_cost
         
         #cost = T.sum(T.sqrt((x-x_hat)**2))+weight
         gparams = [T.grad(cost,param) for param in self.param] 
@@ -129,7 +132,8 @@ class autoencoder(object):
         
         train = theano.function(
             inputs = [x],
-            outputs = [cost,lin_cost,log_cost,weight],
+            #outputs = [cost,lin_cost,log_cost,weight],
+            outputs = [cost],
             updates = updates
         )
         
@@ -164,10 +168,10 @@ class autoencoder(object):
     
         return output(data)
     
-    def save_model(self):
+    def save_model(self,f):
         #p = [(par.name,par.get_value()) for par in self.param]
         
-        f = open("model.dat","w")
+       
         pickle.dump(self, f)
         
         
@@ -182,22 +186,24 @@ if __name__ == '__main__':
     #    data = [[float(x) for x in line.split()] for line in f]
     #data = np.asarray(data).astype(theano.config.floatX)
     data = np.loadtxt("swiss.dat",dtype=theano.config.floatX)
-    units = [3,5,2]
+    #units = [3,9,7,2]
+   #units = [3,6,2]
     #data = np.random.randn(100,6).astype(theano.config.floatX)
     
-    learning_rate = 0.25
+    learning_rate = 20
     iters = 10000
     int_dim = 2
+    f = open("model.dat","w")
     
     
-    
-    #units = [data.shape[1],int(math.ceil(data.shape[1]*1.2))+5,int(max(math.ceil(data.shape[1]/4),int_dim+2)+3),int(max(math.ceil(data.shape[1]/10),int_dim+1)),int_dim]
+    units = [data.shape[1],int(math.ceil(data.shape[1]*1.2))+5,int(max(math.ceil(data.shape[1]/4),int_dim+2)+3),
+             int(max(math.ceil(data.shape[1]/10),int_dim+1)),int_dim]
     
       
     auto = autoencoder(units)
 
     tw1 = timeit.default_timer()
-    auto.pre_train_layers(0,data,10,1000)
+    auto.pre_train_layers(0,data,5,20)
     tw2 = timeit.default_timer()
     
     auto.generate_decoder()
@@ -212,28 +218,36 @@ if __name__ == '__main__':
    
     init_error = auto.train_auto(data)[1]
     
-    auto.train_auto(data)[1]
-    
     best = init_error
-    auto.save_model()
+    auto.save_model(f)
     
     for i in range(iters):
-        if (i%2==0):
-            noise_data = auto.add_noise(data)
-            err = auto.train_auto(noise_data)[1]
-        else:
-            err = auto.train_auto(data)[1]
-        print err
+        #if (i%2==0):
+         #   noise_data = auto.add_noise(data)
+          #  err = auto.train_auto(noise_data)[1]
+        #else:
+       #if(i%10==0):
+        #    plt.cla()
+         #   red = auto.get_hidden_data(data)
+          #  plt.plot(red[:,0], red[:,1],'o')
+           # plt.show()
+        
+        
+        cost,err = auto.train_auto(data)
+        p = [np.sum(np.sqrt(param.get_value()**2)) for param in auto.param]
+        print 'Weights: ',sum(p)
+        print 'Error: ',err
+        print 'Cost: ',cost
         if(err<best):
             best = err
-            auto.save_model()
+            auto.save_model(f)
             print "Best model so far found at iter: ",i
        
     print 'Init error: ', init_error
     
-    f = open("model.dat","r")
+    r = open("model.dat","r")
     
-    best_auto = pickle.Unpickler(f).load()
+    best_auto = pickle.Unpickler(r).load()
     
     
        
@@ -247,7 +261,7 @@ if __name__ == '__main__':
     p = [np.sum(np.sqrt(param.get_value()**2)) for param in best_auto.param]
     print 'Weights: ',sum(p)
     np.savetxt("reduced.dat",best_auto.get_hidden_data(data))
-    
+    np.savetxt("out.dat",best_auto.run_auto(data))
     
 
     

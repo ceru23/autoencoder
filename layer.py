@@ -5,13 +5,14 @@ from theano import sandbox
 
 class layer(object):
     #code
-    def __init__(self,n_in,n_out,W_init,b_init):
+    def __init__(self,n_in,n_out,W_init,b_init,activation='sigmoid'):
         
         self.n_in = n_in
         self.n_out = n_out
+        self.activation = activation
         
-        scale = 0.0001
-        #scale = 1
+        #scale = 0.0001
+        scale = 1
         
         if W_init is None:
             self.W = theano.shared(
@@ -20,7 +21,7 @@ class layer(object):
         			borrow = True)
         else:
             self.W = theano.shared(
-        			value=W_init,
+        			value=W_init*scale,
         			name = 'W',
         			borrow = True)
         
@@ -31,15 +32,21 @@ class layer(object):
             		borrow = True)
         else:
             self.b = theano.shared(
-            		value = b_init.astype(theano.config.floatX),
+            		value = (b_init*scale).astype(theano.config.floatX),
             		name = 'b',
             		borrow = True)
             
         self.param = [self.W,self.b]
 				
     def output(self,x):
-        return T.nnet.sigmoid(T.dot(x,self.W)+self.b)
-        #return T.switch((T.dot(x,self.W)+self.b)<0, 0, T.dot(x,self.W)+self.b)
+        if(self.activation=='sigmoid'):
+            return T.nnet.sigmoid(T.dot(x,self.W)+self.b)
+        elif (self.activation=='relu'):
+            return T.switch((T.dot(x,self.W)+self.b)<0, 0, T.dot(x,self.W)+self.b)
+        elif(self.activation=='softplus'):
+            return T.nnet.softplus(T.dot(x,self.W)+self.b)
+        else:
+            return T.nnet.sigmoid(T.dot(x,self.W)+self.b)
         #return T.nnet.softplus(T.dot(x,self.W)+self.b)
     def current_output(self,data):
         
